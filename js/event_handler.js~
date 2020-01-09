@@ -1,0 +1,57 @@
+
+var map;
+var cur_location_marker;
+var cur_location;
+$(document).ready(function(){
+	map = L.map('map',{zoomControl:false}).setView([31.41752302937,121.20643853877], 19);
+	L.tileLayer('http://192.168.10.30/hot/{z}/{x}/{y}.png', {
+		maxZoom:25,
+		minZoom:14,
+	    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+	}).addTo(map);
+	cur_location = L.icon({
+	iconUrl: 'img/vector.png',
+	iconSize:     [40, 40], // size of the icon
+	iconAnchor:   [20, 15], // point of the icon which will correspond to marker's location
+	});
+	cur_location_marker = L.marker([31.41752302937,121.20643853877], {icon: cur_location}).addTo(map);
+	var hash = L.hash(map);
+});
+
+function onTargetClick(tag_id)
+{
+
+	document.getElementById(tag_id).style.opacity = 1;
+	map.flyTo(new L.LatLng(31.41752302937,121.20643853877), 19);
+}	
+function onTargetRealease(tag_id)
+{
+	document.getElementById(tag_id).style.opacity=0.5;
+
+}
+function onParkIconClick(tag_id)
+{
+	document.getElementById(tag_id).style.opacity = 1;
+}
+function onParkIconRelease(tag_id)
+{
+	document.getElementById(tag_id).style.opacity=0.3;
+}
+
+setInterval(function() {
+    $.get("http://192.168.10.30/cgi_bin/cgiHandler.fcgi", 
+		 {"reqType": "parking"},
+		  function(data)
+		  {
+		  		console.log(data);
+		  		data = JSON.parse(data);
+		  		console.log(data);
+		  		for (i = 0; i < 6; i++) 
+		  		{
+		  			if (data[i]==true)
+  						$('#park_s'+(i+1)).attr("src","img/parking.png");
+  					else
+  						$('#park_s'+(i+1)).attr("src","img/no_parking.png");
+  				}
+		  });
+}, 1000);

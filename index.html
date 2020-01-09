@@ -1,63 +1,111 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <meta charset='utf-8' />
-    <title></title>
-    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.8.1/mapbox-gl.js'></script>
-    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.8.1/mapbox-gl.css' rel='stylesheet' />
-    <style>
-        body { margin:0; padding:0; }
-        #map { position:absolute; top:0; bottom:0; width:100%; }
-    </style>
+<html style="height:100%;margin:0;padding:0;">
+<title>Leaflet page with OSM render server selection</title>
+<meta charset="utf-8">
+<link rel="stylesheet" href="leaflet/leaflet.css" />
+
+<script src="leaflet/leaflet.js"></script>
+<script src="leaflet/leaflet-hash.js"></script>
+<script src="js/jquery-3.4.1.js"></script>
+<script src="js/event_handler.js"></script>
+<script src="leaflet/Leaflet.ImageOverlay.Rotated.js"></script>
+
+<style type="text/css">
+.leaflet-tile-container { pointer-events: auto; }
+.option_container{
+	background-color: #ffffff;
+	border-style: solid;
+	border-width:  2px;
+	border-color:  #ebebeb;
+	border-radius: 15px;
+	display: block;
+	margin-top: 3px;
+}
+#options_container{
+	position: absolute;
+	top: 10px;
+	left: 5px;
+	display: block;
+}
+.overlayer{
+	background-color: #000000;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	opacity: 0;
+	z-index: 6;
+	border-radius: inherit;
+}
+.option_icon
+{
+	opacity: 0.3;
+	height: 60px; 
+	width: 50px; 
+	margin-left: 20px;
+	margin-top: 20px; 
+	float: left; 
+	font-family: Arial;
+	font-weight: bold;
+	z-index: 6;
+}
+.option_icon:hover
+{
+	opacity: 0.7;
+}
+#park_info
+{
+	font-family: Arial;
+	font-weight: bold;
+}
+.clickable_area{
+	background-color: #ffffff;
+	opacity: 0.5;
+}
+</style>
 </head>
-<body>
- 
-<div id='map'></div>
-<script>
-mapboxgl.accessToken = 'pk.eyJ1Ijoic2x5IiwiYSI6IjdiYzFmZmY5NTExOTQ0MTExMGVhZDBkZTIwMmRlYjJhIn0.hOz2brurCBMGWGU5EI-waQ';
-var tileset = 'examples.map-i86nkdio';
-var map = new mapboxgl.Map({
-  container: 'map', // container id
-  style: {
-    "version": 7,
-    "sources": {
-      "simple-tiles": {
-        "type": "raster",
-        "tiles":["http://192.168.10.30/hot/{z}/{x}/{y}.png", "http://b.tile.openstreetmap.org/{z}/{x}/{y}.png"],
-        "tileSize": 256
-      },
-      "power": {
-      "type": "vector",
-      "tiles": ["http://gpstrails.info/ex/leaflet/power/osm/{z}/{x}/{y}.json"]
-    }
-    },
-    "layers": [{
-      "id": "simple-tiles",
-      "type": "raster",
-      "source": "simple-tiles",
-      "minzoom": 0,
-      "maxzoom": 22
-    },
-    {
-    "id": "road",
-    "source": "power",
-    "source-layer": "power",
-    "type": "line",
-    "layout": {
-      "line-join": "round",
-      "line-cap": "round",
-    },
-    "paint": {
-      "line-color": "red",
-      "line-width": 4,
-    }
-  }]
-  },
-  center: [31.41752302937,121.20643853877], // starting position
-  zoom: 18 // starting zoom
-});
-</script>
- 
+<body style="height:100%;margin:0;padding:0;">
+
+<div id="map" style="height:100%; width: 100%; z-index: 2;"></div>
+
+<div id ="options_container", style="height: 100%;width: 20%; z-index: 3;">
+	<div class="option_container", style="height: 120px; width:100%;"><img src="img/continental.png" style="height: 100%; width: 100%;"></div>
+	<!-- <div class="option_container", style="height:240px;width: 100%">
+		<p style="font-size: 18px; margin-left: 20px; margin-bottom: -5px; font-family: Arial; color: #212121bb;">Parking Lots Status</p>
+		<div class="option_icon", id='park_1', onmousedown="onParkIconClick(this.id)", onmouseup="onParkIconRelease(this.id)">
+			<img src="img/parking.png", id='park_s1', style="height: 50px; width: 50px;z-index:5;">
+			Parking
+		</div>
+		<div class="option_icon", id='park_2', onmousedown="onParkIconClick(this.id)", onmouseup="onParkIconRelease(this.id)">
+			<img src="img/parking.png", id='park_s2', style="height: 50px; width: 50px">
+			Parking
+		</div>
+		<div class="option_icon", id='park_3', onmousedown="onParkIconClick(this.id)", onmouseup="onParkIconRelease(this.id)">
+			<img src="img/parking.png", id='park_s3', style="height: 50px; width: 50px">
+			Parking
+		</div>
+		<div class="option_icon", id='park_4', onmousedown="onParkIconClick(this.id)", onmouseup="onParkIconRelease(this.id)">
+			<img src="img/no_parking.png", id='park_s4', style="height: 50px; width: 50px">
+			Parking
+		</div>
+		<div class="option_icon", id='park_5', onmousedown="onParkIconClick(this.id)", onmouseup="onParkIconRelease(this.id)">
+			<img src="img/no_parking.png", id='park_s5', style="height: 50px; width: 50px">
+			Parking
+		</div>
+		<div class="option_icon", id='park_6', onmousedown="onParkIconClick(this.id)", onmouseup="onParkIconRelease(this.id)">
+			<img src="img/no_parking.png", id='park_s6', style="height: 50px; width: 50px">
+			Parking
+		</div>
+	</div>
+	<div class="option_container", id="display_bd", style="height: 120px; width:100%;">
+		
+	</div> --->
+</div>
+
+<!--
+<div class="clickable_area", id="target_area", onmousedown="onTargetClick('target_area')", onmouseup="onTargetRealease('target_area')", style="height: 25px; width: 25px; z-index: 3; position: absolute;bottom: 20px;right: 20px;border-radius:5px;padding: 5px;">
+	<img src="img/target.png", style="height:100%;width: 100%;">
+</div>
+-->
+
 </body>
 </html>
